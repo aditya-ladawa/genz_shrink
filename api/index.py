@@ -104,10 +104,11 @@ async def lifespan(app: FastAPI):
             # Initialize the graph
             app.state.graph = create_react_agent(
                 llm, 
-                [meme_tool, save_memory], 
+                [generate_contextual_meme, save_memory], 
                 prompt=prepare_model_inputs, 
                 store=store, 
-                checkpointer=checkpointer
+                checkpointer=checkpointer,
+                state_schema=State
             )
             print('\nInitialized Graph\n')
 
@@ -568,7 +569,6 @@ async def process_message(graph, query_text: str, config: dict, websocket: WebSo
                 # Extract URLs and clean them
                 meme_urls = re.findall(r"https?://\S+", latest_msg.content)
                 cleaned_meme_urls = [url.rstrip("',") for url in meme_urls]  # Remove trailing commas and quotes
-                print(f"\n{cleaned_meme_urls}\n")
 
                 # Send the meme URLs to the frontend
                 await websocket.send_json({
