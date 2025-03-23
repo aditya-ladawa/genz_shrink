@@ -33,3 +33,11 @@ Your AI-powered **therapist, motivator, and bestie**—GenZ Shrink is an AI chat
 
 ## 🤝 **Contribute & Support**
 Want to make GenZ Shrink even better? Feel free to fork the repo, submit pull requests, or report issues! Let’s build the ultimate GenZ AI together. 🚀  
+
+---
+
+### Ending Notes
+1. Frontend is only HTML, however, completely functional - including websockets, and real time chat meme display.
+2. Ongoing project ...
+
+Thanks !
