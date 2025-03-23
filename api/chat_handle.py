@@ -44,8 +44,8 @@ from .pydm import *
 from RealtimeSTT import AudioToTextRecorder
 
 
-# llm = ChatGroq(model='llama-3.3-70b-versatile', temperature=0.7)
-llm = ChatGroq(model='llama-3.2-90b-vision-preview', temperature=0.7)
+llm = ChatGroq(model='llama-3.3-70b-versatile', temperature=0.3)
+# llm = ChatGroq(model='llama-3.2-90b-vision-preview', temperature=0.1)
 
 
 # Environment variables for credentials
@@ -94,26 +94,26 @@ async def prepare_model_inputs(state, config: RunnableConfig, store: BaseStore):
         memories_msg = ', '.join(memories) if memories else "No memories yet."
         
         system_msg = (f"""
-            "Act as MoodMender: Gen Z’s hybrid best friend/therapist. Keep it 💯—empathetic, stigma-free, and relentlessly relatable. Prioritize vibes over formalities.
+            Act as MoodMender: Gen Z’s hybrid best friend/therapist. Keep it 💯—empathetic, stigma-free, and relentlessly relatable. Prioritize vibes over formalities.
 
-            Drop hilarious, hyper-creative memes as per the conversational flow (even for random meme requests—think relatable hilarious concepts to joke on). Max creativity and hilariousness, zero cringe, and witty.
+            Drop hilarious, hyper-creative memes based on the flow of conversation (even for random meme requests—think wildly relatable and witty concepts). Max creativity and incredible humor, zero cringe.
 
-            Serve micro-actions (e.g., “Try screaming into a pillow, breathe peace, etc.”).
+            Offer micro-actions when needed(e.g., “Scream into a pillow, then breathe peace,” “Take a dance break,” etc.).
 
-            You have two tools: one to generate memes and other to remeber stuff told by user.
-            Never save memories unless explicitly asked—memory space is precious. But, don't forget to memorize important stuff.
+            You have two tools: 
+            1. meme_tool - for generating memes.
+            2. save_memory - for remembering user-shared info (use only when explicitly requested or when you think the information given by user is important; memory space is precious).
 
-            Sprinkle deep-ish questions casually (“Wait, why do you think that situation triggered you?”)
+            Casually sprinkle deep-ish questions (“Wait, why do you think that situation triggered you?”).
 
-            Adapt tone/memes to their mood—sassy, wholesome, or unhinged, depending on their energy.
+            Adapt your tone/memes to their mood—sassy, wholesome, or unhinged, depending on their energy.
 
-            Avoid over use of meme generation, only use when you feel you need to cheer up the user.
-
-            Act like a Psychatrist and advice tem as well as per the necessity.
+            Use meme generation thoughtfully and purposefully. For instance, generate memes to cheer up the user or add humor to the conversation. While memes are a key feature of this chatbot, they should be generated in moderation to maintain a natural and engaging conversation flow. The goal is to enhance the interaction with well-timed and contextually relevant memes, not to overwhelm the user with excessive meme generation.
 
             Key intel: User is {full_name}, {age}. Memories: {memories_msg}.
 
             Golden rule: Be the non-judgy friend who actually helps—no toxic positivity, just realness + laughs."
+            Make sure to continue the chat even after memes get generated.
         """
         )
 
@@ -197,15 +197,17 @@ async def create_meme(template: MemeTemplate, captions: List[str]) -> GeneratedM
 # Main tool implementation
 async def generate_captions(llm, meme_name: str, box_count: int, context: str) -> List[str]:
     """Generate structured captions using LLM, leveraging the template name for context."""
-    prompt = f"""Generate {box_count} meme captions for the '{meme_name}' template. Try not to generate long captions. Generate captions based on number meme captions need to be generated. Don't mention one box, first box, etc. We need direct captions.
+    prompt = f"""
+        Generate {box_count} meme captions for the '{meme_name}' template. Keep them short and punchy.
 
-    The captions should progress towards a hilariously witty and humorous punchline. Each caption should build on the previous one, creating a sense of progression and payoff in the final caption.
+        Ensure captions build up towards a hilariously witty punchline. Each caption should flow naturally into the next, creating progression and comedic payoff.
 
-    If the meme template involves characters or people communicating, ensure the captions reflect a natural conversation or interaction between them. Avoid making the captions feel disconnected or fake—they should align with the meme's visual context and the user's situation.
+        If the meme template involves dialogue, make sure it feels like a natural, funny exchange rather than disjointed phrases.
 
-    Context: {context}
+        Context: {context}
 
-    Return ONLY the captions separated by newlines. Do not include any additional text or explanations:"""
+        Return ONLY the captions, each on a new line. No extra explanations or formatting.
+    """
 
     
     response = await llm.ainvoke(prompt)
@@ -245,6 +247,8 @@ meme_tool = StructuredTool.from_function(
     name="generate_contextual_meme",
     description="Generates memes based on conversation context using random templates",
 )
+
+
 
 
 # graph = create_react_agent(

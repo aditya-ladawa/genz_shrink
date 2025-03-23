@@ -57,6 +57,10 @@ from api.redis_ops import *
 # langchain
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
 
+
+# realtime stt
+from RealtimeSTT import AudioToTextRecorder
+
 load_dotenv()
 
 # environment variables
@@ -427,10 +431,35 @@ async def websocket_llm_chat(
     await websocket.accept()
     current_conversation_id = conversation_id
     config = None
+    recorder = None  # Initialize recorder as None
+    recorded_text = None  # Store transcribed text
 
     try:
         if current_conversation_id == "new":
-            user_query = await websocket.receive_text()
+            # Wait for the first message, which could be text or audio
+            data = await websocket.receive_text()
+            message = json.loads(data)
+
+            if message["type"] == "audio":
+                # Initialize a new recorder
+                recorder = AudioToTextRecorder()
+                recorder.start()
+                await websocket.send_json({"type": "audio_started", "message": "Recording started."})
+
+                # Wait for stop_audio message
+                stop_data = await websocket.receive_text()
+                stop_message = json.loads(stop_data)
+                if stop_message["type"] == "stop_audio":
+                    recorder.stop()
+                    recorded_text = recorder.text()
+                    recorder.shutdown()
+                    await websocket.send_json({
+                        "type": "audio_transcription",
+                        "content": recorded_text
+                    })
+
+            # Now, create a new conversation with the recorded text or initial text
+            user_query = recorded_text if recorded_text else message.get("content", "")
             label = assign_chat_topic_chain.invoke(user_query)
             result = await label_conversation(
                 user_id=current_user.get("user_id"),
@@ -451,8 +480,29 @@ async def websocket_llm_chat(
             await websocket.send_json({"type": "connection_ready", "message": "Connected!"})
 
         while True:
-            user_query = await websocket.receive_text()
-            await process_message(graph, user_query, config, websocket)
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message["type"] == "audio":
+                # Initialize a new recorder for each recording session
+                recorder = AudioToTextRecorder()
+                recorder.start()
+                await websocket.send_json({"type": "audio_started", "message": "Recording started."})
+            elif message["type"] == "stop_audio":
+                if recorder:  # Ensure the recorder exists
+                    recorder.stop()
+                    recorded_text = recorder.text()
+                    await websocket.send_json({
+                        "type": "audio_transcription",
+                        "content": recorded_text
+                    })
+                    recorder.shutdown()
+                    recorder = None  # Reset the recorder
+
+                    # Pass the transcribed text to the LLM
+                    await process_message(graph, recorded_text, config, websocket)
+            else:
+                await process_message(graph, message["content"], config, websocket)
 
     except WebSocketDisconnect:
         print("WebSocket disconnected.")
@@ -474,7 +524,40 @@ async def process_message(graph, query_text: str, config: dict, websocket: WebSo
             if not latest_msg.content:
                 continue
 
+            # Check if the AIMessage has tool_calls
+            if hasattr(latest_msg, "tool_calls") and latest_msg.tool_calls:
+                # Handle tool_calls
+                for tool_call in latest_msg.tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call["args"]
+
+                    # Invoke the tool (e.g., generate_contextual_meme)
+                    if tool_name == "generate_contextual_meme":
+                        # Simulate tool invocation (replace with actual tool logic)
+                        meme_urls = generate_memes(tool_args["conversation_context"], tool_args["num_memes"])
+
+                        # Create a ToolMessage with the results
+                        tool_message = ToolMessage(
+                            content=" ".join(meme_urls),  # Join URLs with a space
+                            tool_call_id=tool_call["id"],  # Match the tool_call_id
+                            additional_kwargs={"urls": meme_urls}  # Include the meme URLs as a list
+                        )
+
+                        # Send the ToolMessage back to the graph
+                        await graph.astream(
+                            {"messages": [tool_message]},
+                            stream_mode="values",
+                            config=config
+                        )
+
+                        # Send the meme URLs to the frontend
+                        await websocket.send_json({
+                            "type": "tool_message",
+                            "content": " ".join(meme_urls),
+                            "urls": meme_urls
+                        })
             else:
+                # If no tool_calls, send the AI response to the frontend
                 await websocket.send_json({
                     "type": "ai_message",
                     "content": latest_msg.content
@@ -485,12 +568,15 @@ async def process_message(graph, query_text: str, config: dict, websocket: WebSo
                 # Extract URLs and clean them
                 meme_urls = re.findall(r"https?://\S+", latest_msg.content)
                 cleaned_meme_urls = [url.rstrip("',") for url in meme_urls]  # Remove trailing commas and quotes
+                print(f"\n{cleaned_meme_urls}\n")
 
+                # Send the meme URLs to the frontend
                 await websocket.send_json({
-                    "type": "tool_message",  # New type for ToolMessage
-                    "content": " ".join(cleaned_meme_urls),  # Join URLs with a space
-                    "urls": cleaned_meme_urls  # Include the cleaned meme URLs as a list
+                    "type": "tool_message",
+                    "content": " ".join(cleaned_meme_urls),
+                    "urls": cleaned_meme_urls
                 })
             except (ValueError, SyntaxError, KeyError) as e:
                 print(f"Error parsing ToolMessage content: {e}")
                 await websocket.send_json({"type": "error", "message": "Failed to parse ToolMessage content."})
+
