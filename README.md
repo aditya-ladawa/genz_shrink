@@ -18,10 +18,10 @@ Your AI-powered **therapist, motivator, and bestie**—GenZ Shrink is an AI chat
 ---
 
 ## 🔮 **Future Features**
-🚀 Text-to-Speech: GenZ Shrink will soon talk back to you, making it feel like a real conversation.
-🚀 More Personalization: Custom moods, personalities, and dynamic emotional intelligence.
-🚀 Mood analytics: Will have weekly mood analytics and even more personalization.
-🚀 GIFs: why only meme when the world has a concept called 'GIFs'.
+- 🚀 Text-to-Speech: GenZ Shrink will soon talk back to you, making it feel like a real conversation.
+- 🚀 More Personalization: Custom moods, personalities, and dynamic emotional intelligence.
+- 🚀 Mood analytics: Will have weekly mood analytics and even more personalization.
+- 🚀 GIFs: why only meme when the world has a concept called 'GIFs'.
 
 
 ## 💻 **How It Works**
