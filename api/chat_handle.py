@@ -49,8 +49,8 @@ from RealtimeSTT import AudioToTextRecorder
 # token_counter
 from .token_counter import tiktoken_counter
 
-# llm = ChatGroq(model='llama-3.3-70b-versatile', temperature=0.6)
-llm = ChatGroq(model='llama-3.2-90b-vision-preview', temperature=0.2)
+llm = ChatGroq(model='llama-3.3-70b-versatile', temperature=0.6)
+# llm = ChatGroq(model='llama-3.2-90b-vision-preview', temperature=0.2)
 
 
 # Environment variables for credentials
@@ -120,7 +120,7 @@ async def prepare_model_inputs(state, config: RunnableConfig, store: BaseStore):
 
             Adapt your tone/memes to their mood—sassy, wholesome, or unhinged, depending on their energy.
 
-            Use meme generation thoughtfully and purposefully. For instance, generate memes to cheer up the user or add humor to the conversation. But don't try to overwhelm the user with memes.
+            Use meme generation thoughtfully and purposefully. For instance, generate memes to cheer up the user or add humor to the conversation. But don't try to overwhelm the user with memes by generating memes on every message. You should decide whether to generate memes based on nature of conversation.
 
             Key intel: User is {full_name}, {age}. Memories: {memories_msg}.
 
