@@ -6,6 +6,7 @@
 Your AI-powered **therapist, motivator, and bestie**—GenZ Shrink is an AI chatbot designed to speak your lingo and adapt to your vibes. Whether you need instant emotional support, someone to talk to, or just some casual chit-chat without spending on a therapist, GenZ Shrink is here for you. Whether you need a therapist-style pep talk, a motivational boost, or just some fun banter, GenZ Shrink delivers. Think of it as a judgment-free bestie, always ready to support you or drop some top-tier advice.  
 
 ---
+## Watch demo video
 [Watch the demo video](https://github.com/aditya-ladawa/genz_shrink/blob/main/files/1_SPED_UP.mp4)
 
 ---
