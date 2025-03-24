@@ -7,7 +7,7 @@ Your AI-powered **therapist, motivator, and bestie**—GenZ Shrink is an AI chat
 
 ---
 ## Watch demo video
-[Watch the demo video](https://github.com/aditya-ladawa/genz_shrink/blob/main/files/1_SPED_UP.mp4)
+[![Watch the video](https://img.youtube.com/vi/MSOiub9WnGw/0.jpg)](https://youtu.be/MSOiub9WnGw)
 
 ---
 
